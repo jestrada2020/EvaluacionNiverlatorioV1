@@ -1,0 +1,1426 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Taller versión uno - Nivelatorio</title>
+    
+    <!-- Configuración simplificada de MathJax -->
+    <script>
+        window.MathJax = {
+            tex: {
+                inlineMath: [['$', '$']],
+                displayMath: [['$$', '$$']],
+                processEscapes: true,
+                packages: ['base', 'ams']
+            },
+            startup: {
+                pageReady: () => {
+                    return Promise.resolve();
+                }
+            },
+            options: {
+                enableMenu: false
+            }
+        };
+    </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/3.2.0/es5/tex-mml-chtml.js"></script>
+    
+    <!-- Plotly para gráficas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/plotly.js/2.24.2/plotly.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #333;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 600px;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .quiz-container {
+            text-align: center;
+        }
+
+        #question-container {
+            margin-bottom: 20px;
+        }
+
+        button {
+            background-color: #007bff;
+            color: #ffffff;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        button:hover {
+            background-color: #0056b3;
+        }
+
+        button:disabled {
+            background-color: #cccccc;
+            cursor: not-allowed;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        #result-container {
+            text-align: center;
+        }
+
+        #feedback {
+            margin-top: 20px;
+            color: #d9534f;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="quiz-container">
+            <div id="question-container"></div>
+            <button id="next-button" onclick="nextQuestion()">Siguiente</button>
+        </div>
+        <div id="result-container" class="hidden">
+            <h2>Resultado</h2>
+            <p id="score"></p>
+            <div id="feedback"></div>
+        </div>
+    </div>
+    <script>
+        const questions = [
+            
+            {
+                question: "Se tiene 4 reglas de 300 cm cada una. La primera tiene marcas divisorias de 2 cm, la segunda de 3 cm, la tercera de 5 cm y la cuarta de 6 cm. Si las reglas se alinean, entonces la primera marca divisoria donde las cuatro reglas coinciden es:",
+                answers: ["12 cm", "15 cm", "18 cm", "30 cm"],
+                correct: 1
+            },
+
+            {
+                question: "En el parque de diversiones 'Aventura' hay tres ruedas de Chicago. La más grande tarda 24 segundos en dar una vuelta, la mediana tarda 18 segundos y la pequeña tarda 12 segundos. A las 3:15:00 de la tarde coincidimos en la parte más alta de cada rueda. ¿A qué hora volvemos a coincidir?",
+                answers: ["3:16:22", "3:16:12", "3:18:22", "3:15:32"],
+                correct: 1
+            },
+            {
+                question: "Se tiene 4 reglas de 300 cm cada una con marcas divisorias de 2 cm, 3 cm, 5 cm y 6 cm respectivamente. Al alinearlas, ¿en qué marca coinciden por primera vez?",
+                answers: ["12 cm", "15 cm", "18 cm", "30 cm"],
+                correct: 3
+            },
+            {
+                question: "Si quitamos la cuarta regla del ejercicio anterior, ¿cuántas marcas divisorias coinciden en total?",
+                answers: ["5", "10", "20", "25"],
+                correct: 2
+            },
+            {
+                question: "Si se deben transportar 8.520 toneladas de arena en un camión de 25 toneladas de capacidad, ¿cuál es el mínimo número de viajes necesarios?",
+                answers: ["338", "339", "340", "341"],
+                correct: 3
+            },
+            {
+                question: "El lunes compré 28 kg de azúcar, el martes 16 kg y el miércoles 12 kg, todas en bolsas de igual capacidad. ¿Cuál es la capacidad máxima en kilogramos de cada bolsa?",
+                answers: ["2", "3", "4", "6"],
+                correct: 1
+            },
+            {
+                question: "En el ejercicio anterior, si cada bolsa está llena a su máxima capacidad, ¿cuántas bolsas se compraron en total durante los tres días?",
+                answers: ["6", "12", "14", "15"],
+                correct: 2
+            },
+
+            // Sección Colegio Criaturitas
+      {
+        question: "En el colegio Criaturitas hay grupos de 30, 36 y 48 alumnos. ¿Cuál es el máximo número de filas posible para distribuir estos grupos?",
+        answers: ["2", "3", "6", "8"],
+        correct: 2
+      },
+      {
+        question: "¿Cuál es el mínimo de integrantes por fila en el grado tercero?",
+        answers: ["5", "6", "7", "8"],
+        correct: 3
+      },
+      // Sección Colores
+      {
+        question: "Tres gemelas compran 112 colores. Marta recibe 60, María 3/5 de lo de Marta, y Mariana el resto. ¿Cuál afirmación es falsa?",
+        answers: [
+          "Entre María y Mariana tienen menos colores que Marta",
+          "María tiene más colores que Mariana",
+          "Marta tiene más colores que María",
+          "Entre María y Mariana tienen más colores que Marta"
+        ],
+        correct: 0
+      },
+      {
+        question: "En el ejercicio anterior, ¿cuál es la mínima cantidad de cajas que puede haber?",
+        answers: ["14", "28", "56", "60"],
+        correct: 0
+      },
+      // Continúa el patrón para todas las preguntas del documento...
+      {
+        question: "Si me pagan 2/3 de 2/5 de 15 millones, ¿cuánto dinero me pagan?",
+        answers: [
+          "12 millones",
+          "8 millones",
+          "6 millones",
+          "4 millones"
+        ],
+        correct: 2
+      },
+      {
+        question: "Había ganado 90.000 en chance, pero perdí 3/5 y presté 5/6 del resto a un amigo. ¿Cuánto dinero me quedó?",
+        answers: ["4.000", "6.000", "8.000", "1.000"],
+        correct: 0
+      },
+    
+
+    {
+        question: "Una fotocopiadora gasta 2/3 de resma de papel en el día. Si una resma contiene 500 hojas, ¿cuántas resmas gastan en 15 días?",
+        answers: [
+          "10 y 10.000",
+          "10 y 5.000",
+          "5 y 2.500",
+          "5 y 5.000"
+        ],
+        correct: 0
+      },
+      {
+        question: "Las 2/3 partes de una tubería de agua de 150 m de largo se encuentran en mal estado. ¿Cuál es la longitud de tubería que debe repararse?",
+        answers: [
+          "25 m",
+          "50 m", 
+          "75 m",
+          "100 m"
+        ],
+        correct: 3
+      },
+      {
+        question: "La tercera parte de los libros de una biblioteca son de literatura y los 4.000 restantes son de ciencia. ¿Cuál es el número total de libros en la biblioteca?",
+        answers: [
+          "6.000",
+          "8.000",
+          "9.000",
+          "12.000"
+        ],
+        correct: 0
+      },
+      {
+        question: "En el colegio hay 42 alumnos varones que representan 3/13 del total de alumnos. ¿Cuál es el número total de alumnas?",
+        answers: [
+          "182",
+          "140",
+          "132",
+          "100"
+        ],
+        correct: 0
+      },
+      {
+        question: "Si 28/35 de la longitud de un camino mide 320 m, ¿Cuál es la longitud total del camino?",
+        answers: [
+          "80 m",
+          "356 m",
+          "400 m",
+          "420 m"
+        ],
+        correct: 2
+      },
+      {
+        question: "Un hombre vende 3/5 de su terreno, alquila ¼ y lo restante lo cultiva. ¿Qué porción de terreno cultiva?",
+        answers: [
+          "39/40",
+          "3/20",
+          "17/20",
+          "1/40"
+        ],
+        correct: 1
+      },
+      {
+        question: "Si se tiene 40 litros de vino, ¿cuántas botellas de 4/3 de litro se pueden llenar?",
+        answers: [
+          "25",
+          "27",
+          "30",
+          "32"
+        ],
+        correct: 2
+      },
+      {
+        question: "Si a diario gano 2/3 de dólar, ¿cuántos dólares gano en 4 semanas?",
+        answers: [
+          "16",
+          "18",
+          "18 2/3",
+          "20 ¼"
+        ],
+        correct: 2
+      },
+      {
+        question: "Del total de alumnos de una escuela de Medellín, la mitad nació en Medellín, un tercio de otros pueblos de Antioquia y 83 son extranjeros. ¿Cuántos alumnos nacieron en Medellín?",
+        answers: [
+          "498",
+          "166",
+          "250",
+          "249"
+        ],
+        correct: 2
+      },
+      {
+        question: "En un quiosco se han vendido los 2/3 de un lote de periódicos por la mañana, y por la tarde la mitad de los que quedaron. ¿Qué fracción del lote se vendió en la tarde?",
+        answers: [
+          "½",
+          "1/3",
+          "1/5",
+          "1/6"
+        ],
+        correct: 3
+      },
+      {
+        question: "Si en total se han dejado de vender 20 periódicos, ¿cuántos periódicos traía el lote inicialmente?",
+        answers: [
+          "60",
+          "80",
+          "100",
+          "120"
+        ],
+        correct: 3
+      },
+
+    {
+        question: "En una reunión 3/7 de las personas son mujeres, 1/5 son hombres y el resto son niños. Si hay 8 mujeres más que hombres, ¿cuántos niños hay?",
+        answers: ["35", "26", "13", "10"],
+        correct: 2
+      },
+      {
+        question: "La operación se aplica a los números reales y está definida como x y = xy + 16. Si x 2 = 32, ¿qué valor satisface la igualdad?",
+        answers: ["3 y -3", "únicamente 4", "4 y -4", "únicamente 3"],
+        correct: 1
+      },
+      {
+        question: "En el conjunto de los números enteros se define el operador a Ω b = ((2-a)(b+2))/2. Si 4 Ω 10 = x, ¿cuál es el valor de x Ω x?",
+        answers: ["12", "70", "20", "140"],
+        correct: 0
+      },
+      {
+        question: "Sea (n) la cantidad de números primos menores o iguales a n. ¿Cuál es el valor de ((12))?",
+        answers: ["3", "5", "1", "7"],
+        correct: 1
+      },
+      {
+        question: "Si (x)=3x-2 y (x)=(x+2)/3, entonces ((x)) – ((x)) es igual a:",
+        answers: ["1", "2", "0", "4"],
+        correct: 0
+      },
+      {
+        question: "Si (a)=a²+5a+6, (b)=b²+2b+3 y (-)(a)=(a)-(a), entonces el valor de (-)(2) es:",
+        answers: ["9", "10", "-9", "-10"],
+        correct: 0
+      },
+      {
+        question: "Si a $ b = b³-a²+3b² y C % d = c²+d³–3d², ¿cuál es el valor de 'x' que satisface x((4%3)–(2$5))/1#7=-5?",
+        answers: ["-40", "15/3", "8", "2/9"],
+        correct: 2
+      },
+      {
+        question: "Se define la operación ∆ para 2 números enteros: (a+1)∆b = a∆b+1∆b y 1∆a = a. ¿Cuál es el valor de 4∆2/3∆2?",
+        answers: ["1/6", "4/3", "3/4", "16/9"],
+        correct: 1
+      },
+      {
+        question: "Todo número impar puede escribirse como 2n+1. Si ∆(2n+1)=10-∆(n) y ∆(2)=12, ¿cuál es el valor de ∆(11)?",
+        answers: ["12", "-2", "23", "8"],
+        correct: 3
+      },
+      {
+        question: "En una calculadora, si m * n = mn/m²+n² y p q = (qp)², ¿cuál es el valor de (1 2)/(3 2)?",
+        answers: ["1/64", "1/80", "1/128", "1/160"],
+        correct: 2
+      },
+      {
+        question: "Se tiene que a * b = √(ab). ¿Cuál es el valor de 4 * 3?",
+        answers: ["2", "√3", "2/3", "√(3/4)"],
+        correct: 1
+      },
+
+    {
+        question: "En un concurso donde las luces verde y roja se encienden cada 2 y 3 minutos respectivamente, si una persona corrió 38 minutos y ganó 1.400 dólares, ¿cuál es el máximo número de veces que pudo sacar 2 al apretar el botón?",
+        answers: ["1", "2", "3", "4"],
+        correct: 2
+      },
+      {
+        question: "Si tres números naturales divididos entre 9 dan residuos 2, 3 y 5 respectivamente, ¿cuál es el único resultado posible para su suma?",
+        answers: ["35", "69", "95", "64"],
+        correct: 1
+      },
+      {
+        question: "En una fila para una atracción, si el niño con el número 17 está rodeado por 4 personas, ¿qué números tienen estas personas?",
+        answers: ["5,16,18,22", "3,16,18,22", "2,16,18,23", "5,16,18,23"],
+        correct: 0
+      },
+      {
+        question: "Los bomberos tienen una manguera de 300 metros. Si colocan un hidrante en una esquina, ¿cuál es el mínimo número de calles que no pueden alcanzar?",
+        answers: ["26", "16", "38", "22"],
+        correct: 3
+      },
+      {
+        question: "Si debe haber más de 100 metros entre hidrantes y se usa una manguera de 200 metros, ¿cuál es el máximo número de hidrantes posible?",
+        answers: ["20", "18", "10", "22"],
+        correct: 1
+      },
+
+    {
+        question: "Daniel está numerando los vértices de un cubo de madera. Si pone 1 en un vértice, ¿qué se puede decir con certeza?",
+        answers: [
+          "5 y 7 son vértices adyacentes",
+          "6 y 8 no son adyacentes",
+          "4 y 7 pueden ser adyacentes",
+          "6 y 7 no pueden ser adyacentes"
+        ],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el mínimo valor que puede tener la diferencia entre vértices opuestos en una cara del cubo?",
+        answers: ["1", "2", "3", "4"],
+        correct: 2
+      },
+      {
+        question: "Se programa una fiesta de integración donde hay 56 jóvenes y la razón de chicas y chicos es de 4 a 3. ¿Cuántas chicas hay?",
+        answers: ["24", "32", "30", "36"],
+        correct: 1
+      },
+      {
+        question: "En una guardería la relación niños a niñas es 5:7. Si hay 20 niños, ¿cuántas niñas hay?",
+        answers: ["18", "24", "28", "32"],
+        correct: 2
+      },
+      {
+        question: "Si el número total de niños y niñas es 84, ¿cuántos niños hay?",
+        answers: ["48", "49", "35", "36"],
+        correct: 2
+      },
+      {
+        question: "La mayor fracción que se puede formar con los números 1,2,3 y 6 es:",
+        answers: ["3/2", "5/3", "17/5", "21/4"],
+        correct: 2
+      },
+      {
+        question: "En una ferretería de 4.800 arandelas, se prueban 192 y se encuentran 8 defectuosas. ¿Cuántas defectuosas se esperan en total?",
+        answers: ["48", "192", "240", "200"],
+        correct: 3
+      },
+      {
+        question: "Marta, Paola y Sandra cobran 416 euros por un trabajo donde trabajaron 14, 10 y 8 horas respectivamente. ¿Cuánto le corresponde a cada una?",
+        answers: [
+          "182, 130 y 104 euros",
+          "168, 140 y 108 euros",
+          "182, 122 y 112 euros",
+          "196, 140 y 80 euros"
+        ],
+        correct: 0
+      },
+      {
+        question: "En una mezcla con proporción 22:8:10:16 de cemento, agua, arena y gravilla, ¿cuál es la razón entre arena y agua respecto al total?",
+        answers: ["9/28", "2/7", "1/7", "9/28"],
+        correct: 0
+      },
+      {
+        question: "En un lago circular las algas cubren 1/5 en día caluroso (≥25°C) y 1/4 en día no caluroso. ¿Cuál es la razón entre la cobertura en día caluroso y no caluroso?",
+        answers: ["5/4", "4/5", "1/20", "20/1"],
+        correct: 1
+      },
+
+    {
+        question: "Si en un lago hay algas que cubren 1/10 y después de un tiempo cubren 3/4, ¿qué se puede afirmar?",
+        answers: [
+          "Fue necesario que transcurriera 4 días",
+          "Fue suficiente que transcurriera 1 día no caluroso y un día caluroso",
+          "Transcurrieron 2 días no calurosos y 1 caluroso",
+          "Transcurrieron 2 días calurosos y 1 no caluroso"
+        ],
+        correct: 1
+      },
+      {
+        question: "En una carretera, la distancia SB es 48 km y la distancia TB es 3/4 de SB. Si la razón entre TR y BT es 5/18, ¿cuál es la distancia entre T y R en km?",
+        answers: ["24", "10", "18", "12"],
+        correct: 1
+      },
+      {
+        question: "Con las condiciones anteriores, ¿cuál es la distancia en km entre B y R?",
+        answers: ["36", "42", "46", "58"],
+        correct: 0
+      },
+      {
+        question: "En una banda transportadora, cuando la polea B da 7 vueltas, A y C dan 21 y 12 respectivamente. Si B da 56 vueltas, ¿cuántas vueltas dan A y C en total?",
+        answers: ["96", "168", "204", "264"],
+        correct: 3
+      },
+      {
+        question: "Un tanque de combustible de 28 galones dispara una alarma en reserva (R) con 4 galones. Si en R se cargan $81.000 hasta 3/4, ¿cuánto falta para llenar?",
+        answers: ["$25.000", "$27.000", "$28.000", "$32.000"],
+        correct: 1
+      },
+      {
+        question: "Por cada 9 jugos de mora vendidos la ganancia es $8.100. Si hasta hoy he ganado $243.000, ¿cuántos jugos se han vendido?",
+        answers: [
+          "La mora está a su mejor momento de rentabilidad",
+          "230 jugos de mora",
+          "270 jugos de mora",
+          "La ganancia por jugo aumenta después de los primeros 81 jugos"
+        ],
+        correct: 2
+      },
+      {
+        question: "Para combatir una infección, un antibiótico tiene actividad bactericida de 2.5 mg por 100.000 bacterias. Si aumenta a 10.0 mg, ¿cuántas bacterias elimina?",
+        answers: ["280.000", "400.000", "360.000", "350.000"],
+        correct: 2
+      },
+      {
+        question: "Si de cada 8 botones producidos, 2 son defectuosos, para cubrir un pedido de 48 botones buenos, ¿cuál afirmación es verdadera?",
+        answers: [
+          "Basta con producir 60 botones",
+          "Es necesario producir 64 botones",
+          "Es suficiente producir 56 botones",
+          "Es necesario producir más de 64 botones"
+        ],
+        correct: 1
+      },
+      {
+        question: "Si 9 obreros tardan 6 días en destruir 3/8 de una construcción, ¿cuántos días se demoran para terminar si se retiran 3 obreros?",
+        answers: ["15", "20/3", "12/5", "27/5"],
+        correct: 0
+      },
+      {
+        question: "Si una finca necesita 4.200 kg de zanahoria mensual para 50 conejos, ¿cuántos kg necesita para 20 conejos por 45 días?",
+        answers: ["2.520", "1.120", "15.750", "3.450"],
+        correct: 0
+      },
+
+    {
+        question: "Si 8 personas consumen 24 m³ de agua en 3 días, ¿cuántos días durarán 18 m³ para 6 personas?",
+        answers: ["3", "2", "1", "4"],
+        correct: 0
+      },
+      {
+        question: "Un motociclista recorrió 17 minutos a 20 m/s, excepto 2 minutos en semáforos. ¿Qué distancia recorrió?",
+        answers: ["20.400 m", "18 km", "340 m", "600 m"],
+        correct: 0
+      },
+      {
+        question: "Un joven recorre 400 m en patineta en 1 minuto 40 segundos. ¿Cuál es su velocidad promedio?",
+        answers: ["10 m/s", "40 m/s", "4 m/s", "1 m/s"],
+        correct: 1
+      },
+      {
+        question: "Si al hacer ejercicio troto 4/5 del recorrido y camino el resto, y trotando invierto 1/5 del tiempo que camino, ¿qué puedo concluir?",
+        answers: [
+          "La velocidad trotando es 10 veces mayor que caminando",
+          "La velocidad caminando es 15 veces menor que trotando",
+          "Las velocidades son iguales",
+          "La velocidad trotando es 20 veces mayor que caminando"
+        ],
+        correct: 3
+      },
+      {
+        question: "Pucca y Garu están a 100 metros. Si Pucca corre a 4 m/s y Garu a 6 m/s hacia el encuentro, ¿en cuánto tiempo se encuentran?",
+        answers: ["5 segundos", "6 segundos", "10 segundos", "20 segundos"],
+        correct: 2
+      },
+      {
+        question: "¿A qué distancia del punto inicial de Pucca se encuentran?",
+        answers: ["20 m", "24 m", "40 m", "60 m"],
+        correct: 2
+      },
+      {
+        question: "Si Pucca corre a 6 m/s y Garu huye en la misma dirección a 4 m/s, ¿cuándo lo alcanza?",
+        answers: [
+          "Pucca no logra alcanzar a Garu",
+          "A los 50 segundos",
+          "A los 200 metros",
+          "A los 100 segundos"
+        ],
+        correct: 1
+      },
+      {
+        question: "Si dos autos salen en sentido opuesto con velocidades en razón 3:5 y la distancia es 400 km, ¿cuántas horas mínimas tardan en encontrarse?",
+        answers: ["10", "3", "5", "4"],
+        correct: 2
+      },
+      {
+        question: "Un ascensor tiene ruedas donde A=C=2B, B=D=E/3. Si E gira 30 veces por 2.5m, ¿cuántos giros da A para subir del piso 3 al 15?",
+        answers: ["2.592", "72", "288", "1.296"],
+        correct: 3
+      },
+      {
+        question: "Andrés empaca 3 cajas/minuto y Carlos 4 cajas/minuto. Si Carlos ayuda 1.5 horas, ¿cuánto tardan en empacar 1.200 cajas?",
+        answers: [
+          "4 horas y media",
+          "3 horas y 40 minutos",
+          "3 horas y 50 minutos",
+          "4 horas y 40 minutos"
+        ],
+        correct: 2
+      },  
+
+    {
+        question: "Doña Azucena adorna una blusa en 10 min, su hija 3 en 10 min, y su empleada 2 en 10 min. Si la empleada solo ayuda 6 horas, ¿cuánto tardan en hacer 600 blusas?",
+        answers: ["22 horas", "22 1/3 horas", "22 horas, 10 minutos", "22 2/6 horas"],
+        correct: 1
+      },
+      {
+        question: "Si la llave fría llena una tina en 4 min, la caliente en 7 min y el desagüe la vacía en 14 min, ¿cuánto tarda en llenarse con todo abierto?",
+        answers: ["3 1/9 minutos", "5 3/5 minutos", "4 1/7 minutos", "3 1/28 minutos"],
+        correct: 0
+      },
+      {
+        question: "Juan y Pablo hacen 30 ejercicios en 30 minutos, Pablo solo los hace en 75 minutos. ¿Cuánto tarda Juan solo?",
+        answers: ["50 minutos", "21,42 minutos", "22 minutos", "Ninguna de las anteriores"],
+        correct: 1
+      },
+      {
+        question: "Si Carlos pinta un salón en 6 horas y Jorge en 4 horas, ¿cuánto tardan juntos en pintar 5 salones?",
+        answers: ["10 horas", "25 horas", "12 horas", "18 horas"],
+        correct: 1
+      },
+      {
+        question: "Si a menor cuota mayor interés, y $100.000 tiene 1% de interés, ¿qué interés tiene una cuota de $40.000?",
+        answers: ["1%", "2,5%", "2%", "4%"],
+        correct: 1
+      },
+      {
+        question: "Calcular el 10% de 180:",
+        answers: ["18", "15", "20", "16"],
+        correct: 0
+      },
+      {
+        question: "¿De qué número es 60 el 40%?",
+        answers: ["150", "120", "180", "140"],
+        correct: 0
+      },
+      {
+        question: "El 15% del 30% de 600 es:",
+        answers: ["40", "27", "270", "2.700"],
+        correct: 2
+      },
+      {
+        question: "Si debo pagar $6.520 por un helado y me dan 5% de descuento, ¿cuánto pago?",
+        answers: ["$6.194", "$6.200", "$6.152", "$6.262,7"],
+        correct: 0
+      },
+      {
+        question: "Una persona tenía $1000, gastó 12% y prestó 25% del resto. ¿Cuánto le quedó?",
+        answers: ["$315", "$540", "$660", "$630"],
+        correct: 3
+      },
+    
+
+    {
+        question: "De 140 libros comprados para venta, se vendió el 35%. ¿Cuántos libros quedan?",
+        answers: ["119", "49", "72", "91"],
+        correct: 3
+      },
+      {
+        question: "De 8.600 kg de café, 20% era pasilla. ¿Cuántos kg de pasilla hay?",
+        answers: ["1.580", "8.550", "1.720", "1.600"],
+        correct: 0
+      },
+      {
+        question: "Si un aumento de $1.500 hace que algo cueste $31.500, ¿qué porcentaje representa el incremento?",
+        answers: ["5%", "8%", "4,77%", "12%"],
+        correct: 2
+      },
+      {
+        question: "Una ensalada se vende en $7.500 con 20% de ganancia. ¿Cuál es su costo?",
+        answers: ["$9.000", "$6.250", "$6.000", "$5.952,38"],
+        correct: 1
+      },
+      {
+        question: "Si me aumentan el sueldo 8% ganaría $4.320. ¿Cuánto gano actualmente?",
+        answers: ["$6.048", "$2.300", "$4.000", "$4.666,5"],
+        correct: 2
+      },
+      {
+        question: "Pedro tiene 54 años y su edad excede la de Juan en 20%. ¿Qué edad tiene Juan?",
+        answers: ["45 años", "64 años", "43 años", "50 años"],
+        correct: 0
+      },
+      {
+        question: "Un hombre ahorró $4.800, 24% de sus ganancias anuales. ¿Cuánto gana al año?",
+        answers: ["$12.000", "$20.000", "$18.000", "$30.000"],
+        correct: 1
+      },
+      {
+        question: "Un auto de 5.000 euros se compra pagando 3/5 de contado y el resto en 2 años con 4% anual. ¿Cuál es la cuota mensual?",
+        answers: ["45 euros", "50 euros", "100 euros", "135 euros"],
+        correct: 1
+      },
+      {
+        question: "Si llenar un tanque cuesta $120.000 y la gasolina sube 25%, ¿cuánto cuesta llenar 7/8 del tanque?",
+        answers: ["$105.000", "$150.000", "$131.250", "$171.428"],
+        correct: 2
+      },
+      {
+        question: "Por vender 5 televisores LCD recibo $350.000 de comisión (5% del precio). ¿Cuánto vale cada TV?",
+        answers: ["$7.500.000", "$999.000", "$1.000.000", "$1.400.000"],
+        correct: 3
+      },
+    
+
+    {
+        question: "Para una mezcla verde se usan 2L amarillo y 6L azul. Si se usan 10L amarillo, ¿qué porcentaje es el azul?",
+        answers: ["33%", "72%", "75%", "40%"],
+        correct: 2
+      },
+      {
+        question: "Si Ricardo gasta 30% en servicios, 45% en alimentación y le quedan $346.000, ¿cuánto tenía inicialmente?",
+        answers: ["$1.385.000", "$1.348.000", "$1.347.000", "$1.384.000"],
+        correct: 0
+      },
+      {
+        question: "A una obra le falta 40% y el tiempo invertido es 30 días más que cuando llevaba 30%. ¿Cuál es el tiempo total de ejecución?",
+        answers: ["100", "120", "130", "133,3"],
+        correct: 3
+      },
+      {
+        question: "En una fiesta, 70% son niños. Al formar parejas, 80 niños quedan solos. ¿Cuántas niñas hay?",
+        answers: ["70", "60", "30", "No es posible determinarlo"],
+        correct: 1
+      },
+      {
+        question: "Si Santiago aumenta 10% la distancia que corre cada semana, ¿cuál es el aumento porcentual en la tercera semana?",
+        answers: ["81%", "21%", "19%", "30%"],
+        correct: 2
+      },
+      {
+        question: "Una moto reduce su velocidad v1 en 20% a v2, luego aumenta 25% a v3. ¿Qué se puede inferir?",
+        answers: ["v1 es 75% de v3", "v1=v3", "v3=2v22", "v3 es 105% de v1"],
+        correct: 1
+      },
+      {
+        question: "Si el corredor C recorre una pista en t0, B toma 150% de ese tiempo y A toma 150% del tiempo de B, ¿cuál es la razón entre velocidades de A y B?",
+        answers: ["3/2", "2/3", "1/3", "3"],
+        correct: 1
+      },
+      {
+        question: "En elecciones con dos candidatos, A obtuvo 2.000 votos más que B, quien obtuvo 30% del total. ¿Cuántos votos hubo en total?",
+        answers: ["6.667", "5.000", "5.100", "2.857"],
+        correct: 0
+      },
+      {
+        question: "De una botella llena de alcohol se extrae 1/5 y se reemplaza con agua, luego se extrae 1/5 de la solución. ¿Qué porcentaje de alcohol tiene la segunda extracción?",
+        answers: ["80%", "18%", "16%", "4%"],
+        correct: 1
+      },
+      {
+        question: "Si se multiplica el costo de un pasaje por 0.68, ¿qué descuento se está aplicando?",
+        answers: ["68%", "6,8%", "32%", "50%"],
+        correct: 2
+      },
+    
+
+    {
+        question: "Miguel coloca $5.000.000 al 10% anual y recibe $260.000 más que un capital de $2.000.000. ¿Cuál es la tasa del segundo capital?",
+        answers: ["15%", "12%", "22%", "24%"],
+        correct: 1
+      },
+      {
+        question: "Si 22% de w es 66% de 5.000, ¿cuál es el valor de w?",
+        answers: ["3.300", "15.000", "7.500", "10.000"],
+        correct: 2
+      },
+      {
+        question: "De una botella extraigo 2/5 y luego 1/3 de lo que queda. ¿Qué porcentaje tomé respecto a la botella?",
+        answers: ["20%", "50%", "40%", "70%"],
+        correct: 1
+      },
+      {
+        question: "¿Qué porcentaje representa el vino restante respecto al total?",
+        answers: ["20%", "50%", "40%", "70%"],
+        correct: 1
+      },
+      {
+        question: "¿Qué porcentaje es el vino tomado respecto al que quedó?",
+        answers: ["20%", "50%", "40%", "70%"],
+        correct: 2
+      },
+      {
+        question: "Un hombre gasta 45% de su sueldo y ahorra $6.600. ¿Cuál es su sueldo anual?",
+        answers: ["$10.000", "$18.600", "$13.500", "$12.000"],
+        correct: 3
+      },
+      {
+        question: "En una fábrica de jugos usan 67,5L agua y 22,5L zumo. ¿Qué porcentaje es el zumo?",
+        answers: ["33,3%", "25%", "22,5%", "60%"],
+        correct: 0
+      },
+      {
+        question: "Luis deja $20.000.000: 35% al hermano mayor, 40% del resto al menor y el resto a un asilo. ¿Cuánto recibe el asilo?",
+        answers: ["$7.800.000", "$12.200.000", "$6.400.000", "$13.000.000"],
+        correct: 0
+      },
+      {
+        question: "Si un traje de $105 es 25% de la mitad de mi dinero, ¿cuánto tenía antes de comprarlo?",
+        answers: ["$315", "$420", "$840", "$630"],
+        correct: 2
+      },
+      {
+        question: "En una epidemia, 30% estaban enfermos. Si 50% de enfermos se curan y 50% de sanos se enferman, ¿qué porcentaje está sano?",
+        answers: ["70%", "50%", "35%", "15%"],
+        correct: 2
+      },
+    
+
+    {
+        question: "Si llenar un tanque cuesta $120.000 y el medidor muestra un consumo de 3/4, ¿cuánto costó el combustible usado?",
+        answers: ["$60.000", "$75.000", "$90.000", "$52.000"],
+        correct: 2
+      },
+      {
+        question: "Si medio galón cuesta $3.750 y rinde 50km, ¿cuántos kilómetros puede recorrer con el combustible restante?",
+        answers: ["100 km", "150 km", "250 km", "200 km"],
+        correct: 2
+      },
+      {
+        question: "A un tanque que le falta 40% para llenarse se le extrae 25% de su contenido. ¿Qué porcentaje queda respecto al total?",
+        answers: ["65%", "45%", "55%", "35%"],
+        correct: 1
+      },
+      {
+        question: "En elecciones, B obtuvo 60% de votos de A, C 75% de B, y D 45% de A. ¿Qué porcentaje del total obtuvo B?",
+        answers: ["24%", "45%", "60%", "62%"],
+        correct: 0
+      },
+      {
+        question: "Al repartir T monedas entre n personas reciben x%, y entre n+1 personas reciben y%. Si son múltiplos de 5, ¿cuál es n?",
+        answers: ["2", "10", "4", "5"],
+        correct: 2
+      },
+      {
+        question: "En promoción de libros, cada libro adicional aumenta 5% el descuento desde 10% hasta 8 libros. ¿Cuánto ahorran Ana y María juntas vs separadas?",
+        answers: ["440", "590", "150", "50"],
+        correct: 2
+      },
+      {
+        question: "Si 70% usan casco y 30% de quienes no lo usan mueren en accidentes, ¿qué porcentaje del total muere sin casco?",
+        answers: ["21%", "33%", "3%", "9%"],
+        correct: 3
+      },
+      {
+        question: "¿Qué porcentaje representa el área sombreada del total?",
+        answers: ["60%", "25%", "40%", "50%"],
+        correct: 2
+      },
+      {
+        question: "En un cuadrado donde M y N son puntos medios, ¿qué porcentaje es el área sombreada del triángulo MN?",
+        answers: ["80%", "70%", "100%", "90%"],
+        correct: 0
+      },
+      {
+        question: "Si A = C = 2B y B = D = E/3, ¿cuántas vueltas da A cuando E da 30?",
+        answers: ["180", "90", "60", "45"],
+        correct: 2
+      },
+    
+
+    {
+        question: "En una banda transportadora, cuando la rueda principal da 10 vueltas, ¿cuántas vueltas dan las ruedas secundarias?",
+        answers: ["25", "30", "35", "40"],
+        correct: 1
+      },
+      {
+        question: "Si la temperatura aumenta 2°C cada hora y se inicia a 15°C, ¿qué temperatura habrá después de 6 horas?",
+        answers: ["25°C", "27°C", "29°C", "31°C"],
+        correct: 2
+      },
+      {
+        question: "En una mezcla de 3:2:1, si se tienen 12 litros del primer componente, ¿cuántos litros hay en total?",
+        answers: ["20", "24", "28", "30"],
+        correct: 1
+      },
+      {
+        question: "Si un tren viaja a 60 km/h durante 2.5 horas, ¿qué distancia recorre?",
+        answers: ["120 km", "150 km", "180 km", "200 km"],
+        correct: 1
+      },
+      {
+        question: "En un triángulo rectángulo, si un cateto mide 6 y la hipotenusa 10, ¿cuánto mide el otro cateto?",
+        answers: ["6", "8", "9", "12"],
+        correct: 1
+      },
+      {
+        question: "Si 3 pintores pintan una casa en 6 días, ¿cuántos días tardarán 2 pintores?",
+        answers: ["7", "8", "9", "10"],
+        correct: 2
+      },
+      {
+        question: "¿Cuál es el perímetro de un rectángulo de base 8 y altura 5?",
+        answers: ["24", "26", "28", "30"],
+        correct: 1
+      },
+      {
+        question: "Si el 15% de un número es 45, ¿cuál es el número?",
+        answers: ["250", "300", "350", "400"],
+        correct: 1
+      },
+      {
+        question: "En una progresión aritmética, si a₁=2 y d=3, ¿cuál es a₅?",
+        answers: ["12", "14", "16", "18"],
+        correct: 1
+      },
+      {
+        question: "Si 2x + 3 = 11, ¿cuál es el valor de x?",
+        answers: ["2", "3", "4", "5"],
+        correct: 2
+      },
+    
+
+    {
+        question: "Si un capital de $1000 genera 5% de interés mensual, ¿cuánto genera en 3 meses?",
+        answers: ["$150", "$200", "$250", "$300"],
+        correct: 0
+      },
+      {
+        question: "En una caja hay 3 bolas rojas, 4 azules y 5 verdes. ¿Cuál es la probabilidad de sacar una bola roja?",
+        answers: ["1/4", "1/3", "1/2", "1/5"],
+        correct: 0
+      },
+      {
+        question: "Dados dos números primos consecutivos mayores que 3, ¿cuál es su diferencia mínima?",
+        answers: ["1", "2", "3", "4"],
+        correct: 1
+      },
+      {
+        question: "Si una máquina produce 100 piezas por hora, ¿cuántas produce en 2.5 días de trabajo continuo?",
+        answers: ["5000", "6000", "7000", "8000"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el área de un círculo de radio 5 unidades? (usar π=3.14)",
+        answers: ["75.5", "78.5", "81.5", "84.5"],
+        correct: 1
+      },
+      {
+        question: "Si 5x - 3 = 2x + 9, ¿cuál es el valor de x?",
+        answers: ["2", "3", "4", "5"],
+        correct: 2
+      },
+      {
+        question: "¿Cuál es el volumen de un cubo de arista 4 cm?",
+        answers: ["16 cm³", "32 cm³", "48 cm³", "64 cm³"],
+        correct: 3
+      },
+      {
+        question: "En un grupo de 30 estudiantes, ¿cuántos subgrupos diferentes de 3 estudiantes se pueden formar?",
+        answers: ["3480", "4060", "4270", "4480"],
+        correct: 2
+      },
+      {
+        question: "Si un producto cuesta $80 y se aumenta 25%, luego se rebaja 20%, ¿cuál es el precio final?",
+        answers: ["$80", "$85", "$90", "$95"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es la suma de los ángulos internos de un pentágono?",
+        answers: ["480°", "500°", "520°", "540°"],
+        correct: 3
+      },
+    
+
+    {
+        question: "En una carrera de relevos de 4x100m, cada corredor mantiene una velocidad constante de 8 m/s. ¿Cuánto tarda el equipo en completar la carrera?",
+        answers: ["45s", "50s", "55s", "60s"],
+        correct: 1
+      },
+      {
+        question: "Si una batería pierde 20% de su carga cada hora, ¿cuánta carga le queda después de 3 horas?",
+        answers: ["51.2%", "48.8%", "40%", "35%"],
+        correct: 0
+      },
+      {
+        question: "En un triángulo equilátero de lado 6cm, ¿cuál es su altura? (usar √3=1.73)",
+        answers: ["4.8cm", "5.2cm", "5.6cm", "6.0cm"],
+        correct: 1
+      },
+      {
+        question: "Si 3 gallinas ponen 4 huevos en 2 días, ¿cuántos huevos pondrán 6 gallinas en 6 días?",
+        answers: ["18", "24", "30", "36"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el mínimo común múltiplo de 12, 18 y 24?",
+        answers: ["36", "48", "72", "96"],
+        correct: 2
+      },
+      {
+        question: "Si un coche recorre 150km con 15L de gasolina, ¿cuántos litros necesita para recorrer 400km?",
+        answers: ["35L", "40L", "45L", "50L"],
+        correct: 1
+      },
+      {
+        question: "En una urna hay 5 bolas blancas y 3 negras. Si se extraen 2 bolas sin reposición, ¿cuál es la probabilidad de que ambas sean blancas?",
+        answers: ["5/14", "5/16", "10/28", "15/56"],
+        correct: 2
+      },
+      {
+        question: "Si x+y=8 y xy=15, ¿cuál es el valor de x²+y²?",
+        answers: ["34", "36", "38", "40"],
+        correct: 0
+      },
+      {
+        question: "Una escalera de 13m está apoyada en una pared formando un ángulo de 60° con el suelo. ¿A qué altura llega en la pared?",
+        answers: ["11.3m", "10.5m", "9.8m", "8.7m"],
+        correct: 0
+      },    
+
+    {
+        question: "En un triángulo rectángulo, si uno de sus ángulos mide 30°, ¿cuál es la relación entre el cateto opuesto y la hipotenusa?",
+        answers: ["1/3", "1/2", "2/3", "3/4"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el resultado de (0.2)² + (0.3)³?",
+        answers: ["0.067", "0.067", "0.087", "0.097"],
+        correct: 2
+      },
+      {
+        question: "Un comerciante compra artículos a $80 y los vende a $100. ¿Cuál es su porcentaje de ganancia?",
+        answers: ["20%", "25%", "30%", "35%"],
+        correct: 1
+      },
+      {
+        question: "¿Qué número multiplicado por sí mismo da 0.0081?",
+        answers: ["0.09", "0.08", "0.07", "0.06"],
+        correct: 0
+      },
+      {
+        question: "Si 2^n = 32, ¿cuál es el valor de n?",
+        answers: ["4", "5", "6", "7"],
+        correct: 1
+      },
+      {
+        question: "En una progresión geométrica, si a₁=2 y r=3, ¿cuál es a₄?",
+        answers: ["54", "36", "48", "72"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es la media geométrica de 4 y 9?",
+        answers: ["6", "6.5", "5.5", "6.25"],
+        correct: 0
+      },
+      {
+        question: "Si log₁₀(x) = 2, ¿cuál es el valor de x?",
+        answers: ["20", "100", "200", "1000"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el área de un rombo con diagonales de 6 y 8 unidades?",
+        answers: ["24", "48", "12", "36"],
+        correct: 0
+      },
+      {
+        question: "Si 3x % 5 = 2, ¿cuál es el menor valor positivo de x?",
+        answers: ["4", "3", "2", "1"],
+        correct: 1
+      },    
+
+    {
+        question: "¿Cuántos números de tres cifras son múltiplos de 5?",
+        answers: ["180", "190", "200", "210"],
+        correct: 0
+      },
+      {
+        question: "Si (a+b)² = 25 y ab = 12, ¿cuánto vale a²+b²?",
+        answers: ["1", "25", "13", "49"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el perímetro de un hexágono regular de lado 5?",
+        answers: ["25", "30", "35", "40"],
+        correct: 1
+      },
+      {
+        question: "La ecuación x² + 5x + 6 = 0 tiene como soluciones:",
+        answers: ["-2 y -3", "-1 y -4", "2 y 3", "1 y 4"],
+        correct: 0
+      },
+      {
+        question: "¿Qué fracción representa 0.125?",
+        answers: ["1/4", "1/8", "1/16", "1/32"],
+        correct: 1
+      },
+      {
+        question: "Si un dado se lanza dos veces, ¿cuál es la probabilidad de obtener suma 7?",
+        answers: ["1/6", "5/36", "1/4", "7/36"],
+        correct: 1
+      },
+      {
+        question: "El complemento de 35° es:",
+        answers: ["55°", "65°", "145°", "325°"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es la tangente de 45°?",
+        answers: ["0", "1", "√2", "2"],
+        correct: 1
+      },
+      {
+        question: "Un número aumentado en su 40% es 84. ¿Cuál es el número?",
+        answers: ["60", "50", "70", "80"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el valor de (1 + 1/2 + 1/4 + 1/8)?",
+        answers: ["15/8", "7/4", "31/16", "63/32"],
+        correct: 0
+      },
+
+    {
+        question: "La diferencia entre dos números es 6 y su producto es 27. ¿Cuál es el número mayor?",
+        answers: ["9", "3", "6", "-3"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el valor de x en la ecuación 5x - 3 = 2x + 9?",
+        answers: ["3", "4", "5", "6"],
+        correct: 2
+      },
+      {
+        question: "En una progresión aritmética, si a₁ = 3 y d = 2, ¿cuál es a₁₀?",
+        answers: ["21", "20", "19", "18"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el cociente de 1001 dividido entre 7?",
+        answers: ["143", "142", "141", "140"],
+        correct: 0
+      },
+      {
+        question: "Un rectángulo tiene perímetro 20 y área 24. ¿Cuáles son sus dimensiones?",
+        answers: ["4 y 6", "3 y 8", "2 y 10", "5 y 5"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es la suma de los primeros 15 números naturales?",
+        answers: ["105", "115", "120", "125"],
+        correct: 2
+      },
+      {
+        question: "Si x² - 5x + 6 = 0, ¿cuál es el valor de x² + x?",
+        answers: ["6", "7", "8", "9"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el valor de sen²30° + cos²30°?",
+        answers: ["0", "1", "2", "3"],
+        correct: 1
+      },
+      {
+        question: "El punto medio entre (2,3) y (6,7) es:",
+        answers: ["(4,5)", "(3,4)", "(5,6)", "(2,4)"],
+        correct: 0
+      },
+      {
+        question: "Si 5^n = 625, ¿cuál es el valor de n?",
+        answers: ["3", "4", "5", "6"],
+        correct: 1
+      },
+    
+
+    {    
+    question: "Si dos números están en razón de 3:5 y su suma es 72, ¿cuál es el número menor?",
+    answers: ["27", "30", "45", "48"],
+    correct: 0
+  },
+  {
+    question: "¿Cuál es la distancia entre los puntos (1,2) y (4,6)?",
+    answers: ["5", "√25", "5²", "√20"],
+    correct: 0
+  },
+  {
+    question: "Si log₂(x) = 3, entonces x es igual a:",
+    answers: ["6", "8", "9", "10"],
+    correct: 1
+  },
+  {
+    question: "La suma de los ángulos externos de un pentágono es:",
+    answers: ["180°", "360°", "540°", "720°"],
+    correct: 1
+  },
+  {
+    question: "¿Cuál es el valor absoluto de |3 - 8| + |-2|?",
+    answers: ["7", "13", "3", "9"],
+    correct: 0
+  },
+  {
+    question: "Si 3x + 2y = 12 y 2x - y = 3, ¿cuál es el valor de x + y?",
+    answers: ["3", "4", "5", "6"],
+    correct: 2
+  },
+  {
+    question: "¿Cuál es el área de un triángulo con base 6 y altura 8?",
+    answers: ["48", "24", "12", "36"],
+    correct: 1
+  },
+  {
+    question: "Si 2ⁿ = 128, ¿cuál es el valor de n?",
+    answers: ["5", "6", "7", "8"],
+    correct: 2
+  },
+  {
+    question: "¿Cuál es el resultado de (√16 + √9)²?",
+    answers: ["25", "36", "49", "64"],
+    correct: 1
+  },
+  {
+    question: "La diagonal de un cuadrado mide √50. ¿Cuál es su área?",
+    answers: ["25", "20", "30", "35"],
+    correct: 0
+  },
+
+
+    {
+        question: "En una progresión geométrica si a₁ = 2 y r = 3, ¿cuál es a₅?",
+        answers: ["162", "486", "243", "729"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el tercer ángulo de un triángulo si dos de sus ángulos miden 45° y 60°?",
+        answers: ["75°", "80°", "85°", "90°"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es la pendiente de la recta que pasa por los puntos (2,3) y (4,7)?",
+        answers: ["1", "2", "3", "4"],
+        correct: 1
+      },
+      {
+        question: "Un número aumentado en su 25% es igual a 100. ¿Cuál es el número?",
+        answers: ["75", "80", "85", "90"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el valor de π/6 en radianes?",
+        answers: ["0.523", "0.785", "1.047", "1.571"],
+        correct: 0
+      },
+      {
+        question: "Si 3x + 4y = 10 y 2x - 3y = 5, ¿cuál es el valor de x?",
+        answers: ["2", "3", "4", "5"],
+        correct: 2
+      },
+      {
+        question: "¿Cuál es el área de un círculo inscrito en un cuadrado de lado 8?",
+        answers: ["12.56", "16.28", "50.24", "64.00"],
+        correct: 2
+      },
+      {
+        question: "Si n! = 120, ¿cuál es el valor de n?",
+        answers: ["4", "5", "6", "7"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el coeficiente de x³ en (x + 2)⁴?",
+        answers: ["4", "8", "12", "16"],
+        correct: 0
+      },
+      {
+        question: "La ecuación x² - 6x + 9 = 0 tiene:",
+        answers: [
+          "Dos soluciones diferentes",
+          "Una solución doble",
+          "No tiene solución real",
+          "Infinitas soluciones"
+        ],
+        correct: 1
+      },
+
+    {
+        question: "¿Cuál es el valor de sen(60°)?",
+        answers: ["1/2", "√2/2", "√3/2", "1"],
+        correct: 2
+      },
+      {
+        question: "Un rectángulo tiene área 48 y perímetro 28. ¿Cuáles son sus dimensiones?",
+        answers: ["4 y 12", "6 y 8", "5 y 9", "3 y 16"],
+        correct: 1
+      },
+      {
+        question: "Si 2x - 3y = 7 y 3x + 2y = 4, ¿cuál es el valor de y?",
+        answers: ["-3", "-2", "-1", "0"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el término general de la sucesión: 2, 6, 12, 20, ...?",
+        answers: ["n² + 1", "n² + n", "n(n + 1)", "n(n - 1)"],
+        correct: 1
+      },
+      {
+        question: "La suma de dos números es 20 y su diferencia es 4. ¿Cuál es el producto de estos números?",
+        answers: ["96", "98", "100", "102"],
+        correct: 0
+      },
+      {
+        question: "Si f(x) = x² - 3x + 2, ¿cuál es f(4)?",
+        answers: ["6", "8", "10", "12"],
+        correct: 1
+      },
+      {
+        question: "¿Cuál es el complemento del ángulo 65°?",
+        answers: ["15°", "25°", "35°", "45°"],
+        correct: 1
+      },
+      {
+        question: "La ecuación 2x² + 5x - 3 = 0 tiene como soluciones:",
+        answers: [
+          "-3 y 1/2",
+          "1/2 y -3/2",
+          "3/2 y -1",
+          "-1/2 y 3"
+        ],
+        correct: 1
+      },
+      {
+        question: "Un cubo tiene volumen 27 cm³. ¿Cuál es su área total?",
+        answers: ["54 cm²", "81 cm²", "108 cm²", "27 cm²"],
+        correct: 0
+      },
+      {
+        question: "¿Cuál es el residuo de dividir 1234 entre 11?",
+        answers: ["2", "3", "4", "5"],
+        correct: 1
+      },
+    
+    {
+        question: "El mínimo común múltiplo de 12, 18 y 24 es:",
+        answers: ["36", "48", "72", "96"],
+        correct: 2
+    },
+    {
+        question: "La hipotenusa de un triángulo rectángulo mide 13 y un cateto 5. El otro cateto mide:",
+        answers: ["12", "11", "10", "9"],
+        correct: 0
+    },
+    {
+        question: "¿Cuántas diagonales tiene un polígono de 8 lados?",
+        answers: ["18", "20", "24", "28"],
+        correct: 2
+    },
+    {
+        question: "Si 3^x = 81, entonces x vale:",
+        answers: ["3", "4", "5", "6"],
+        correct: 1
+    },
+    {
+        question: "El 40% del 60% de 100 es:",
+        answers: ["24", "36", "48", "54"],
+        correct: 0
+    },
+    {
+        question: "La suma de los primeros 20 números pares positivos es:",
+        answers: ["380", "400", "410", "420"],
+        correct: 3
+    },
+    {
+        question: "¿Cuál es la probabilidad de sacar un as de una baraja de 52 cartas?",
+        answers: ["1/13", "1/4", "4/52", "1/26"],
+        correct: 0
+    },
+    {
+        question: "El lado de un cuadrado cuya diagonal mide 8√2 es:",
+        answers: ["8", "16", "4", "12"],
+        correct: 0
+    },
+    {
+        question: "La solución de la ecuación log₂(x) = 3 es:",
+        answers: ["6", "8", "9", "16"],
+        correct: 1
+    },
+    {
+        question: "El promedio de los números 15, 18, x, 21 y 24 es 20. El valor de x es:",
+        answers: ["22", "20", "18", "16"],
+        correct: 0
+    }
+
+            // Continúa agregando más preguntas de forma similar
+        ];
+
+        let currentQuestionIndex = 0;
+        let score = 0;
+
+        function displayQuestion() {
+            const questionContainer = document.getElementById('question-container');
+            const questionData = questions[currentQuestionIndex];
+            
+            let questionHTML = `<p>Pregunta ${currentQuestionIndex + 1}: ${questionData.question}</p>`;
+            questionData.answers.forEach((answer, index) => {
+                questionHTML += `
+                    <div>
+                        <input type="radio" name="answer" id="answer${index}" value="${index}">
+                        <label for="answer${index}">${answer}</label>
+                    </div>`;
+            });
+
+            questionContainer.innerHTML = questionHTML;
+        }
+
+        function nextQuestion() {
+            const selectedAnswer = document.querySelector('input[name="answer"]:checked');
+            if (!selectedAnswer) {
+                alert("Por favor selecciona una respuesta");
+                return;
+            }
+
+            const answerIndex = parseInt(selectedAnswer.value);
+            if (answerIndex === questions[currentQuestionIndex].correct) {
+                score++;
+            }
+
+            currentQuestionIndex++;
+
+            if (currentQuestionIndex < questions.length) {
+                displayQuestion();
+            } else {
+                displayResult();
+            }
+        }
+
+        function displayResult() {
+            const quizContainer = document.querySelector('.quiz-container');
+            const resultContainer = document.getElementById('result-container');
+            const scoreElement = document.getElementById('score');
+            const feedbackElement = document.getElementById('feedback');
+
+            quizContainer.classList.add('hidden');
+            resultContainer.classList.remove('hidden');
+
+            const grade = (score / questions.length) * 4 + 1;
+            scoreElement.textContent = `Tu calificación es: ${grade.toFixed(2)} de 5`;
+
+            let feedbackHTML = '';
+            questions.forEach((question, index) => {
+                if (index < currentQuestionIndex && questions[index].correct !== parseInt(document.querySelector(`input[name="answer"][value="${questions[index].correct}"]`).value)) {
+                    feedbackHTML += `<p>Pregunta ${index + 1}: Respuesta incorrecta. La respuesta correcta era: ${question.answers[question.correct]}</p>`;
+                }
+            });
+            feedbackElement.innerHTML = feedbackHTML;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            displayQuestion();
+        });
+    </script>
+</body>
+</html>
