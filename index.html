@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sistema Evaluativo de Matemáticas</title>
+    <title>Sistema Evaluativo de Matemáticas </title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/katex.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.16.9/contrib/auto-render.min.js"></script>
     <style>
         body {
             font-family: 'Arial', sans-serif;
@@ -35,6 +39,7 @@
             max-width: 800px;
             margin: 0 auto;
             width: 100%;
+            box-sizing: border-box;
         }
 
         #progress-bar {
@@ -69,12 +74,6 @@
 
         .question {
             margin-bottom: 1.5rem;
-            display: none;
-        }
-
-        .question.active {
-            display: block;
-            animation: fadeIn 0.5s ease;
         }
 
         .options {
@@ -143,18 +142,60 @@
             cursor: not-allowed;
         }
 
-        #result-container {
-            display: none;
-            text-align: center;
-            padding: 2rem;
-            background: white;
-            border-radius: 12px;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        /* Estilos para las ayudas */
+        .help-section {
+            margin-top: 1.5rem;
+            border-top: 1px solid #e2e8f0;
+            padding-top: 1rem;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
+        .help-buttons {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .help-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border: 1px solid #4299e1;
+            border-radius: 6px;
+            background-color: white;
+            color: #4299e1;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .help-content {
+            display: none;
+            padding: 1rem;
+            background-color: #f8fafc;
+            border-radius: 8px;
+            margin-top: 1rem;
+        }
+
+        .help-content.active {
+            display: block;
+        }
+
+        .video-container {
+            position: relative;
+            padding-bottom: 56.25%;
+            height: 0;
+            overflow: hidden;
+            max-width: 100%;
+            margin-top: 1rem;
+        }
+
+        .video-container iframe {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
         }
 
         footer {
@@ -165,12 +206,12 @@
             margin-top: auto;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
 </head>
 <body>
     <header>
         <h1>Taller Uno - Nivelatorio semestre 02</h1>
     </header>
+    
     <main>
         <div id="progress-bar">
             <div id="progress"></div>
@@ -188,277 +229,979 @@
             <div id="topic-breakdown"></div>
         </div>
     </main>
+
     <footer>
-        <p>&copy; 2024 Sistema Evaluativo de Matemáticas</p>
+        <p>&copy; 2024 Sistema Nivelatorio para Matemáticas - Juan A Arias Quiceno & John J Estrada Álvarez</p>
     </footer>
+
     <script>
         document.addEventListener("DOMContentLoaded", function() {
             const questions = {
                 aritmetica: [
-                  
-                  {
-                    question: "Resuelve la operación: \\[10 + 5 - 7 - 3 + 2\\]",
-                    options: [
-                      "\\[7\\]",
-                      "\\[5\\]",
-                      "\\[9\\]",
-                      "\\[3\\]"
-                    ],
-                    correct: 0
-                  },
-                  {
-                    question: "Resuelve la operación: \\[-9 + 4 - 8 + 12 - 6\\]",
-                    options: [
-                      "\\[-7\\]",
-                      "\\[-5\\]",
-                      "\\[-9\\]",
-                      "\\[-3\\]"
-                    ],
-                    correct: 0
-                  },
-                  
-                {
-                    "question": "Resuelve la operación: \\[8 × (5 - [3 - 1]) + 2\\]",
-                    "options": [
-                      "\\[26\\]",
-                      "\\[24\\]",
-                      "\\[28\\]",
-                      "\\[22\\]"
-                    ],
-                    "correct": 0
-                  },
                     {
-                        question: "Resuelve la operación: \\[[5 × (3 + 2)] - {7 + (3 × 2)}\\]",
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\left(\\frac{5}{6} - \\left\\{\\frac{1}{2} - \\left[\\frac{1}{3} + \\frac{1}{4}\\right]\\right\\}\\right) × \\frac{3}{4}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                        "\\[12\\]",
-                        "\\[15\\]",
-                        "\\[11\\]",
-                        "\\[17\\]"
+                            { latex: '\\frac{11}{16}' },
+                            { latex: '\\frac{3}{4}' },
+                            { latex: '\\frac{7}{12}' },
+                            { latex: '\\frac{2}{3}' }
                         ],
                         correct: 0
                     },
                     {
-                        question: "Resuelve la operación: \\[{6 + [3 × (2 + 1)]} - 4\\]",
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\frac{1}{4} ÷ \\left(\\frac{2}{3} - \\frac{1}{8}\\right) + \\frac{1}{2}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[11\\]",
-                          "\\[13\\]",
-                          "\\[9\\]",
-                          "\\[15\\]"
+                            { latex: '\\frac{7}{6}' },
+                            { latex: '\\frac{5}{4}' },
+                            { latex: '\\frac{4}{3}' },
+                            { latex: '\\frac{25}{26}' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\left\\{\\frac{2}{3} × \\left(\\frac{3}{4} + \\frac{1}{2}\\right)\\right\\} ÷ \\left(\\frac{1}{6} + \\frac{1}{3}\\right)',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '2' },
+                            { latex: '\\frac{3}{2}' },
+                            { latex: '\\frac{5}{3}' },
+                            { latex: '3' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '\\left(\\frac{1}{2} + \\frac{3}{4}\\right) - \\left[\\frac{1}{5} - \\left(\\frac{1}{2} - \\frac{1}{3}\\right)\\right]',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\frac{73}{60}' },
+                            { latex: '\\frac{7}{6}' },
+                            { latex: '\\frac{11}{10}' },
+                            { latex: '\\frac{5}{4}' }
                         ],
                         correct: 0
-                      },
-                      
-                      {
-                        question: "Calcula el resultado de la siguiente expresión: \\[\\left(\\frac{1}{2} + \\frac{3}{4}\\right) - \\left[\\frac{1}{5} - \\left(\\frac{1}{2} - \\frac{1}{3}\\right)\\right]\\]",
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '{6 + [3 × (2 + 1)]} - 4',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[\\frac{13}{12}\\]",
-                          "\\[\\frac{7}{6}\\]",
-                          "\\[\\frac{11}{10}\\]",
-                          "\\[\\frac{5}{4}\\]"
+                            { latex: '11' },
+                            { latex: '13' },
+                            { latex: '9' },
+                            { latex: '15' }
                         ],
                         correct: 0
-                      },
-                      {
-                        question: "Resuelve la siguiente operación: \\[\\left\\{\\frac{2}{3} × \\left(\\frac{3}{4} + \\frac{1}{2}\\right)\\right\\} ÷ \\left(\\frac{1}{6} + \\frac{1}{3}\\right)\\]",
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '[5 × (3 + 2)] - {7 + (3 × 2)}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[2\\]",
-                          "\\[\\frac{3}{2}\\]",
-                          "\\[\\frac{5}{2}\\]",
-                          "\\[3\\]"
+                            { latex: '12' },
+                            { latex: '15' },
+                            { latex: '11' },
+                            { latex: '17' }
                         ],
                         correct: 0
-                      },
-                      {
-                        question: "Simplifica la expresión siguiente: \\[\\frac{1}{4} ÷ \\left(\\frac{2}{3} - \\frac{1}{8}\\right) + \\frac{1}{2}\\]",
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '8 × (5 - [3 - 1]) + 2',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[\\frac{7}{6}\\]",
-                          "\\[\\frac{5}{4}\\]",
-                          "\\[\\frac{4}{3}\\]",
-                          "\\[\\frac{3}{2}\\]"
+                            { latex: '26' },
+                            { latex: '24' },
+                            { latex: '28' },
+                            { latex: '22' }
                         ],
                         correct: 0
-                      },
-                      {
-                        question: "Determina el valor de la expresión: \\[\\left(\\frac{5}{6} - \\left\\{\\frac{1}{2} - \\left[\\frac{1}{3} + \\frac{1}{4}\\right]\\right\\}\\right) × \\frac{3}{4}\\]",
+                    }, 
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '-9 + 4 - 8 + 12 - 6',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[\\frac{5}{8}\\]",
-                          "\\[\\frac{3}{4}\\]",
-                          "\\[\\frac{7}{12}\\]",
-                          "\\[\\frac{2}{3}\\]"
+                            { latex: '-7' },
+                            { latex: '-5' },
+                            { latex: '-9' },
+                            { latex: '-3' }
                         ],
                         correct: 0
-                      },
-                      
-                      {
-                        question: "Suma los siguientes números y considera la mejor forma de alinearlos: \\[2,3 + 1,456\\] \n\nSugerencia: Alinea los números por el punto decimal: \n\\[\\begin{align*} 2,300 \\\\ +1,456 \\end{align*}\\]",
+                    },
+                    {
+                        question: 'Resuelve las siguientes operaciones:',
+                        latex: '10 + 5 - 7 - 3 + 2',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[3,756\\]",
-                          "\\[3,856\\]",
-                          "\\[3,656\\]",
-                          "\\[3,956\\]"
+                            { latex: '7' },
+                            { latex: '5' },
+                            { latex: '9' },
+                            { latex: '3' }
                         ],
                         correct: 0
-                      },
-                      {
-                        question: "Suma los siguientes números y considera la mejor forma de alinearlos: \\[0,75 + 0,004\\] \n\nSugerencia: Alinea los números por el punto decimal: \n\\[\\begin{align*} 0,750 \\\\ +0,004 \\end{align*}\\]",
+                    },                
+                    {
+                        question: 'Resuelve la siguiente operación:',
+                        latex: '\\frac{2}{3} + \\frac{5}{6}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[0,754\\]",
-                          "\\[0,745\\]",
-                          "\\[0,755\\]",
-                          "\\[0,753\\]"
+                            { latex: '\\frac{3}{2}' },
+                            { latex: '\\frac{7}{6}' },
+                            { latex: '\\frac{19}{18}' },
+                            { latex: '\\frac{25}{18}' }
                         ],
                         correct: 0
-                      },
-                      {
-                        question: "Suma los siguientes números y considera la mejor forma de alinearlos: \\[123,4 + 56,789\\] \n\nSugerencia: Alinea los números por el punto decimal y rellena con ceros si es necesario: \n\\[\\begin{align*} 123,400 \\\\ +56,789 \\end{align*}\\]",
+                    },
+                    {
+                        question: 'Suma los siguientes números y considera la mejor forma de alinearlos:',
+                        latex: ' \n  \n 2,3 + 1,456 \\\\   \n  \n \\\\  Sugerencia: \\\\ \\textbf{Alinea los números por el punto decimal} \\\\ \n  \n  \n \\\\ \\\\ \n{ } \n{ } \n{ } \n\\begin{align*} 2,300 \\\\ +1,456 \\end{align*}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
                         options: [
-                          "\\[180,189\\]",
-                          "\\[179,189\\]",
-                          "\\[181,189\\]",
-                          "\\[178,189\\]"
+                            { latex: '3,756' },
+                            { latex: '3,856' },
+                            { latex: '3,656' },
+                            { latex: '3,956' }
                         ],
                         correct: 0
-                      },
-                ],
-                aritmetica2: [
-                        {
-                            question: "En el colegio Criaturitas hay grupos de 30, 36 y 48 alumnos. ¿Cuál es el máximo número de filas posible para distribuir estos grupos?",
-                            options: ["2", "3", "6", "8"],
-                            correct: 2
+                    },
+                    {
+                        question: 'Suma los siguientes números y considera la mejor forma de alinearlos:',
+                        latex: ' \n  \n 0,75 + 0,004 \\\\   \n  \n \\\\  Sugerencia: \\\\ \\textbf{Alinea los números por el punto decimal} \\\\ \n  \n  \n \\\\ \\\\ \n{ } \n{ } \n{ } \n\\begin{align*} 0,750 \\\\ +0,004 \\end{align*}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Si se deben transportar 8.520 toneladas de arena en un camión de 25 toneladas de capacidad, ¿cuál es el mínimo número de viajes necesarios?",
-                            options: ["338", "339", "340", "341"],
-                            correct: 3
+                        options: [
+                            { latex: '0,754' },
+                            { latex: '0,745' },
+                            { latex: '0,755' },
+                            { latex: '0,753' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'Suma los siguientes números y considera la mejor forma de alinearlos:',
+                        latex: ' \n  \n 123,4 + 56,789 \\\\   \n  \n \\\\  Sugerencia: \\\\ \\textbf{Alinea los números por el punto decimal} \\\\ \n  \n  \n \\\\ \\\\ \n{ } \n{ } \n{ } \n\\begin{align*} 123,400 \\\\ +56,789 \\end{align*}',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "El lunes compré 28 kg de azúcar, el martes 16 kg y el miércoles 12 kg, todas en bolsas de igual capacidad. ¿Cuál es la capacidad máxima en kilogramos de cada bolsa?",
-                            options: ["2", "3", "4", "6"],
-                            correct: 1
+                        options: [
+                            { latex: '180,189' },
+                            { latex: '179,189' },
+                            { latex: '181,189' },
+                            { latex: '178,189' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'En el colegio Criaturitas hay grupos de 30, 36 y 48 alumnos. ¿Cuál es el máximo número de filas posible para distribuir estos grupos?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "En el ejercicio anterior, si cada bolsa está llena a su máxima capacidad, ¿cuántas bolsas se compraron en total durante los tres días?",
-                            options: ["6", "12", "14", "15"],
-                            correct: 2
+                        options: [
+                            { latex: '2' },
+                            { latex: '3' },
+                            { latex: '6' },
+                            { latex: '8' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'Si se deben transportar 8.520 toneladas de arena en un camión de 25 toneladas de capacidad, ¿cuál es el mínimo número de viajes necesarios?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Se tiene 4 reglas de 300 cm cada una con marcas divisorias de 2 cm, 3 cm, 5 cm y 6 cm respectivamente. Al alinearlas, ¿en qué marca coinciden por primera vez?",
-                            options: ["12 cm", "15 cm", "18 cm", "30 cm"],
-                            correct: 3
+                        options: [
+                            { latex: '338' },
+                            { latex: '339' },
+                            { latex: '340' },
+                            { latex: '341' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'El lunes compré 28 kg de azúcar, el martes 16 kg y el miércoles 12 kg, todas en bolsas de igual capacidad. ¿Cuál es la capacidad máxima en kilogramos de cada bolsa?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Si quitamos la cuarta regla del ejercicio anterior, ¿cuántas marcas divisorias coinciden en total?",
-                            options: ["5", "10", "20", "25"],
-                            correct: 2
+                        options: [
+                            { latex: '2' },
+                            { latex: '3' },
+                            { latex: '4' },
+                            { latex: '6' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'En el ejercicio anterior, si cada bolsa está llena a su máxima capacidad, ¿cuántas bolsas se compraron en total durante los tres días?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "En el parque de diversiones 'Aventura' hay tres ruedas de Chicago. La más grande tarda 24 segundos en dar una vuelta, la mediana tarda 18 segundos y la pequeña tarda 12 segundos. A las 3:15:00 de la tarde coincidimos en la parte más alta de cada rueda. ¿A qué hora volvemos a coincidir?",
-                            options: ["3:16:22", "3:16:12", "3:18:22", "3:15:32"],
-                            correct: 1
+                        options: [
+                            { latex: '6' },
+                            { latex: '12' },
+                            { latex: '14' },
+                            { latex: '15' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'Se tiene 4 reglas de 300 cm cada una con marcas divisorias de 2 cm, 3 cm, 5 cm y 6 cm respectivamente. Al alinearlas, ¿en qué marca coinciden por primera vez?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Tres gemelas compran 112 colores. Marta recibe 60, María 3/5 de lo de Marta, y Mariana el resto. ¿Cuál afirmación es falsa?",
-                            options: [
-                            "Entre María y Mariana tienen menos colores que Marta",
-                            "María tiene más colores que Mariana",
-                            "Marta tiene más colores que María",
-                            "Entre María y Mariana tienen más colores que Marta"
-                            ],
-                            correct: 0
+                        options: [
+                            { latex: '12 \\ cm' },
+                            { latex: '15 \\ cm' },
+                            { latex: '18 \\ cm' },
+                            { latex: '30 \\ cm' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'Si quitamos la cuarta regla del ejercicio anterior, ¿cuántas marcas divisorias coinciden en total?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Si me pagan 2/3 de 2/5 de 15 millones, ¿cuánto dinero me pagan?",
-                            options: [
-                            "12 millones",
-                            "8 millones",
-                            "6 millones",
-                            "4 millones"
-                            ],
-                            correct: 2
+                        options: [
+                            { latex: '5' },
+                            { latex: '10' },
+                            { latex: '20' },
+                            { latex: '25' }
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: 'En el parque de diversiones Aventura hay tres ruedas de Chicago. La más grande tarda 24 segundos en dar una vuelta, la mediana tarda 18 segundos y la pequeña tarda 12 segundos. A las 3:15:00 de la tarde coincidimos en la parte más alta de cada rueda. ¿A qué hora volvemos a coincidir?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Había ganado 90.000 en chance, pero perdí 3/5 y presté 5/6 del resto a un amigo. ¿Cuánto dinero me quedó?",
-                            options: ["4.000", "6.000", "8.000", "1.000"],
-                            correct: 0
-                        }
-                ],
-                aritmetica3: [
-                        {
-                            question: "En una mezcla con proporción 22:8:10:16 de cemento, agua, arena y gravilla, ¿cuál es la razón entre arena y agua respecto al total?",
-                            options: ["9/28", "2/7", "1/7", "9/28"],
-                            correct: 0
+                        options: [
+                            { latex: '3:16:22' },
+                            { latex: '3:16:12' },
+                            { latex: '3:18:22' },
+                            { latex: '3:15:32' }
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: 'Tres gemelas compran 112 colores. Marta recibe 60, María 3/5 de lo de Marta, y Mariana el resto. ¿Cuál afirmación es falsa?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "En un lago circular las algas cubren 1/5 en día caluroso (≥25°C) y 1/4 en día no caluroso. ¿Cuál es la razón entre la cobertura en día caluroso y no caluroso?",
-                            options: ["5/4", "4/5", "1/20", "20/1"],
-                            correct: 1
+                        options: [
+                            { latex: '\\text{Entre María y Mariana tienen menos colores que Marta}' },
+                            { latex: '\\text{María tiene más colores que Mariana}' },
+                            { latex: '\\text{Marta tiene más colores que María}' },
+                            { latex: '\\text{Entre María y Mariana tienen más colores que Marta}' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'Si me pagan 2/3 de 2/5 de 15 millones, ¿cuánto dinero me pagan?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                    
-                        {
-                            question: "Si en un lago hay algas que cubren 1/10 y después de un tiempo cubren 3/4, ¿qué se puede afirmar?",
-                            options: [
-                            "Fue necesario que transcurriera 4 días",
-                            "Fue suficiente que transcurriera 1 día no caluroso y un día caluroso",
-                            "Transcurrieron 2 días no calurosos y 1 caluroso",
-                            "Transcurrieron 2 días calurosos y 1 no caluroso"
-                            ],
-                            correct: 1
+                        options: [
+                            { latex: '12 \\ \\text{millones}' },
+                            { latex: '8 \\ \\text{millones}' },
+                            { latex: '6 \\ \\text{millones}' },
+                            { latex: '4 \\ \\text{millones}' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'Había ganado 90.000 en chance, pero perdí 3/5 y presté 5/6 del resto a un amigo. ¿Cuánto dinero me quedó?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "En una carretera, la distancia SB es 48 km y la distancia TB es 3/4 de SB. Si la razón entre TR y BT es 5/18, ¿cuál es la distancia entre T y R en km?",
-                            options: ["24", "10", "18", "12"],
-                            correct: 1
+                        options: [
+                            { latex: '4.000' },
+                            { latex: '6.000' },
+                            { latex: '8.000' },
+                            { latex: '1.000' }
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: 'En una mezcla con proporción 22:8:10:16 de cemento, agua, arena y gravilla, ¿cuál es la razón entre arena y agua respecto al total?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Con las condiciones anteriores, ¿cuál es la distancia en km entre B y R?",
-                            options: ["36", "42", "46", "58"],
-                            correct: 0
+                        options: [
+                            { latex: '\\frac{9}{28}' },
+                            { latex: '\\frac{2}{7}' },
+                            { latex: '\\frac{1}{7}' },
+                            { latex: '\\frac{9}{29}' }
+                        ],
+                        correct: 0
+                    },
+                    {
+                        question: 'En un lago circular las algas cubren 1/5 en día caluroso (≥25°C) y 1/4 en día no caluroso. ¿Cuál es la razón entre la cobertura en día caluroso y no caluroso?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "En una banda transportadora, cuando la polea B da 7 vueltas, A y C dan 21 y 12 respectivamente. Si B da 56 vueltas, ¿cuántas vueltas dan A y C en total?",
-                            options: ["96", "168", "204", "264"],
-                            correct: 3
+                        options: [
+                            { latex: '\\frac{5}{4}' },
+                            { latex: '\\frac{4}{5}' },
+                            { latex: '\\frac{1}{20}' },
+                            { latex: '\\frac{20}{1}' }
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: 'Si en un lago hay algas que cubren 1/10 y después de un tiempo cubren 3/4, ¿qué se puede afirmar?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Un tanque de combustible de 28 galones dispara una alarma en reserva (R) con 4 galones. Si en R se cargan $81.000 hasta 3/4, ¿cuánto falta para llenar?",
-                            options: ["$25.000", "$27.000", "$28.000", "$32.000"],
-                            correct: 1
+                        options: [
+                            { latex: '\\text{Fue necesario que transcurriera} \\  4 \\   \\text{días}' },
+                            { latex: '\\text{Fue suficiente que transcurriera} \\  1 \\  \\text{día no caluroso y un día caluroso}' },
+                            { latex: '\\text{Transcurrieron} \\  2 \\  \\text{días no calurosos y} \\  1 \\  \\text{caluroso}' },
+                            { latex: '\\text{Transcurrieron} \\  2 \\  \\text{días calurosos y} \\  1 \\  \\text{no caluroso}' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'En una carretera, la distancia SB es 48 km y la distancia TB es 3/4 de SB. Si la razón entre TR y BT es 5/18, ¿cuál es la distancia entre T y R en km?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Por cada 9 jugos de mora vendidos la ganancia es $8.100. Si hasta hoy he ganado $243.000, ¿cuántos jugos se han vendido?",
-                            options: [
-                            "La mora está a su mejor momento de rentabilidad",
-                            "230 jugos de mora",
-                            "270 jugos de mora",
-                            "La ganancia por jugo aumenta después de los primeros 81 jugos"
-                            ],
-                            correct: 2
+                        options: [
+                            { latex: '24' },
+                            { latex: '10' },
+                            { latex: '18' },
+                            { latex: '12' }
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: 'Con las condiciones anteriores, ¿cuál es la distancia en km entre B y R?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Para combatir una infección, un antibiótico tiene actividad bactericida de 2.5 mg por 100.000 bacterias. Si aumenta a 10.0 mg, ¿cuántas bacterias elimina?",
-                            options: ["280.000", "400.000", "360.000", "350.000"],
-                            correct: 2
+                        options: [
+                            { latex: '36' },
+                            { latex: '42' },
+                            { latex: '46' },
+                            { latex: '58' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'En una banda transportadora, cuando la polea B da 7 vueltas, A y C dan 21 y 12 respectivamente. Si B da 56 vueltas, ¿cuántas vueltas dan A y C en total?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
                         },
-                        {
-                            question: "Si de cada 8 botones producidos, 2 son defectuosos, para cubrir un pedido de 48 botones buenos, ¿cuál afirmación es verdadera?",
-                            options: [
-                            "Basta con producir 60 botones",
-                            "Es necesario producir 64 botones",
-                            "Es suficiente producir 56 botones",
-                            "Es necesario producir más de 64 botones"
-                            ],
-                            correct: 1
-                        }
+                        options: [
+                            { latex: '96' },
+                            { latex: '168' },
+                            { latex: '204' },
+                            { latex: '264' }
+                        ],
+                        correct: 3
+                    },
+                    {
+                        question: 'Un tanque de combustible de 28 galones dispara una alarma en reserva (R) con 4 galones. Si en R se cargan $81.000 hasta 3/4, ¿cuánto falta para llenar?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '25.000' },
+                            { latex: '27.000' },
+                            { latex: '28.000' },
+                            { latex: '32.000' }
+                        ],
+                        correct: 1
+                    },
+                    {
+                        question: 'Por cada 9 jugos de mora vendidos la ganancia es $8.100. Si hasta hoy he ganado $243.000, ¿cuántos jugos se han vendido?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\text{La mora está a su mejor momento de rentabilidad}' },
+                            { latex: '230   \\  \\text{jugos de mora}' },
+                            { latex: '270   \\  \\text{jugos de mora}' },
+                            { latex: '\\text{La ganancia por jugo aumenta después de los primeros} \\  81 \\  \\text{jugos}' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'Para combatir una infección, un antibiótico tiene actividad bactericida de 2.5 mg por 100.000 bacterias. Si aumenta a 10.0 mg, ¿cuántas bacterias elimina?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '280.000' },
+                            { latex: '400.000' },
+                            { latex: '300.000' },
+                            { latex: '350.000' }
+                        ],
+                        correct: 2
+                    },
+                    {
+                        question: 'Si de cada 8 botones producidos, 2 son defectuosos, para cubrir un pedido de 48 botones buenos, ¿cuál afirmación es verdadera?',
+                        latex: '',
+                        helps: {
+                            video: {
+                                id: 'XdxeuGKSPVM',
+                                title: 'Video explicativo: Suma de fracciones'
+                            },
+                            text: {
+                                title: 'Procedimiento paso a paso',
+                                content: `Para sumar fracciones con diferente denominador:
+                                1) Hallamos el MCM de los denominadores: $MCM(3,6) = 6$
+                                2) Convertimos la primera fracción: $\\frac{2}{3} = \\frac{2 \\cdot 2}{3 \\cdot 2} = \\frac{4}{6}$
+                                3) La segunda fracción ya tiene denominador 6
+                                4) Sumamos: $\\frac{4}{6} + \\frac{5}{6} = \\frac{9}{6} = \\frac{3}{2}$`
+                            },
+                            link: {
+                                url: 'https://jestrada2020.github.io/MatematicaUnoCES2020/',
+                                title: 'Guía completa de suma de fracciones'
+                            }
+                        },
+                        options: [
+                            { latex: '\\text{Basta con producir} \\  60 \\  \text{botones}' },
+                            { latex: '\\text{Es necesario producir} \\  64 \\  \\text{botones}' },
+                            { latex: '\\text{Es suficiente producir} \\  56 \\  \\text{botones}' },
+                            { latex: '\\text{Es necesario producir más de} \\  64 \\  \\text{botones}' }
+                        ],
+                        correct: 1
+                    },
                 ]
             };
 
             let currentTopic = 0;
             let currentQuestion = 0;
-            const topics = ['aritmetica', 'aritmetica2', 'aritmetica3'];
+            const topics = Object.keys(questions);
             const topicNames = {
-                'aritmetica': 'Aritmética operaciones básicas',
-                'aritmetica2': 'Aritmética problemas nivel uno',
-                'aritmetica3': 'Aritmética problemas nivel dos'
+                'aritmetica': 'Aritmética básica'
             };
             let userAnswers = {};
 
@@ -469,42 +1212,128 @@
             const progressBar = document.getElementById("progress");
             const topicIndicator = document.getElementById("topic-indicator");
 
+            function displayQuestion() {
+                const topic = topics[currentTopic];
+                const question = questions[topic][currentQuestion];
+                
+                let helpSection = '';
+                if (question.helps) {
+                    helpSection = `
+                        <div class="help-section">
+                            <h4>¿Necesitas ayuda?</h4>
+                            <div class="help-buttons">
+                                ${question.helps.video ? `
+                                    <button class="help-button" data-help="video">
+                                        <i class="fas fa-video"></i>
+                                        Video explicativo
+                                    </button>
+                                ` : ''}
+                                ${question.helps.text ? `
+                                    <button class="help-button" data-help="text">
+                                        <i class="fas fa-file-alt"></i>
+                                        Texto explicativo
+                                    </button>
+                                ` : ''}
+                                ${question.helps.link ? `
+                                    <button class="help-button" data-help="link">
+                                        <i class="fas fa-external-link-alt"></i>
+                                        Recurso web
+                                    </button>
+                                ` : ''}
+                            </div>
+                            <div class="help-contents">
+                                ${question.helps.video ? `
+                                    <div class="help-content" id="video-help">
+                                        <h5>${question.helps.video.title}</h5>
+                                        <div class="video-container">
+                                            <iframe src="https://www.youtube.com/embed/${question.helps.video.id}" 
+                                                    frameborder="0" 
+                                                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                                                    allowfullscreen></iframe>
+                                        </div>
+                                    </div>
+                                ` : ''}
+                                ${question.helps.text ? `
+                                    <div class="help-content" id="text-help">
+                                        <h5>${question.helps.text.title}</h5>
+                                        <div>${question.helps.text.content}</div>
+                                    </div>
+                                ` : ''}
+                                ${question.helps.link ? `
+                                    <div class="help-content" id="link-help">
+                                        <h5>Recurso adicional</h5>
+                                        <a href="${question.helps.link.url}" target="_blank" rel="noopener noreferrer">
+                                            ${question.helps.link.title}
+                                            <i class="fas fa-external-link-alt ml-2"></i>
+                                        </a>
+                                    </div>
+                                ` : ''}
+                            </div>
+                        </div>
+                    `;
+                }
+
+                container.innerHTML = `
+                    <div class="question">
+                        <h3>Pregunta ${currentTopic * questions[topic].length + currentQuestion + 1}</h3>
+                        <p>${question.question}</p>
+                        ${question.latex ? `<p>$$${question.latex}$$</p>` : ''}
+                        <div class="options">
+                            ${question.options.map((option, index) => `
+                                <div>
+                                    <input type="radio" id="option${index}" name="answer" value="${index}" 
+                                        ${userAnswers[`${topic}_${currentQuestion}`] === index ? 'checked' : ''}>
+                                    <label class="option-label" for="option${index}">
+                                        ${option.latex ? `$$${option.latex}$$` : option}
+                                    </label>
+                                </div>
+                            `).join('')}
+                        </div>
+                        ${helpSection}
+                    </div>
+                `;
+
+                // Agregar event listeners para los botones de ayuda
+                document.querySelectorAll('.help-button').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const helpType = this.dataset.help;
+                        toggleHelp(helpType);
+                    });
+                });
+
+                // Renderizar LaTeX
+                renderMathInElement(document.body, {
+                    delimiters: [
+                        {left: '$$', right: '$$', display: true},
+                        {left: '$', right: '$', display: false}
+                    ]
+                });
+
+                updateProgress();
+                updateTopicIndicator();
+                updateButtons();
+            }
+
+            function toggleHelp(helpType) {
+                const helpContents = document.querySelectorAll('.help-content');
+                helpContents.forEach(content => {
+                    if (content.id === `${helpType}-help`) {
+                        content.classList.toggle('active');
+                    } else {
+                        content.classList.remove('active');
+                    }
+                });
+            }
+
             function updateProgress() {
                 const totalQuestions = Object.values(questions).reduce((acc, curr) => acc + curr.length, 0);
-                const currentTotal = currentTopic * Object.values(questions)[0].length + currentQuestion + 1;
+                const currentTotal = currentTopic * questions[topics[currentTopic]].length + currentQuestion + 1;
                 const progress = (currentTotal / totalQuestions) * 100;
                 progressBar.style.width = `${progress}%`;
             }
 
             function updateTopicIndicator() {
                 topicIndicator.textContent = `Tópico actual: ${topicNames[topics[currentTopic]]}`;
-            }
-
-            function displayQuestion() {
-                const topic = topics[currentTopic];
-                const question = questions[topic][currentQuestion];
-                
-                container.innerHTML = `
-                    <div class="question active">
-                        <h3>Pregunta ${currentTopic * 2 + currentQuestion + 1}</h3>
-                        <p>${question.question}</p>
-                        <div class="options">
-                            ${question.options.map((option, index) => `
-                                <div>
-                                    <input type="radio" id="option${index}" name="answer" value="${index}" 
-                                        ${userAnswers[`${topic}_${currentQuestion}`] === index ? 'checked' : ''}>
-                                    <label class="option-label" for="option${index}">${option}</label>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-
-                // Renderizar LaTeX
-                MathJax.typesetPromise();
-                updateProgress();
-                updateTopicIndicator();
-                updateButtons();
             }
 
             function updateButtons() {
@@ -574,69 +1403,39 @@
 
             function displayResults() {
                 const results = calculateResults();
-                const resultContainer = document.getElementById("result-container");
-                const scoreDisplay = document.getElementById("score-display");
-                const topicBreakdown = document.getElementById("topic-breakdown");
+                const resultContainer = document.getElementById('result-container');
+                const questionContainer = document.getElementById('question-container');
+                const buttons = document.querySelector('.buttons');
 
-                scoreDisplay.innerHTML = `
-                    <h3>Puntuación Total: ${results.total} de ${Object.values(questions).reduce((acc, curr) => acc + curr.length, 0)}</h3>
-                    <p>Porcentaje: ${results.percentage.toFixed(1)}%</p>
+                // Ocultar contenedor de preguntas y botones
+                questionContainer.style.display = 'none';
+                buttons.style.display = 'none';
+
+                // Mostrar resultados
+                let topicBreakdown = '';
+                Object.entries(results.byTopic).forEach(([topic, data]) => {
+                    topicBreakdown += `
+                        <div class="topic-result">
+                            <h3>${topicNames[topic]}</h3>
+                            <p>Correctas: ${data.correct} de ${data.total}</p>
+                            <p>Porcentaje: ${data.percentage.toFixed(1)}%</p>
+                        </div>
+                    `;
+                });
+
+                document.getElementById('score-display').innerHTML = `
+                    <h3>Puntuación Total: ${results.percentage.toFixed(1)}%</h3>
+                    <p>Respuestas correctas: ${results.total} de ${Object.values(questions).reduce((acc, curr) => acc + curr.length, 0)}</p>
                 `;
 
-                topicBreakdown.innerHTML = topics.map(topic => `
-                    <div>
-                        <h4>${topicNames[topic]}</h4>
-                        <p>Correctas: ${results.byTopic[topic].correct} de ${results.byTopic[topic].total}</p>
-                        <p>Porcentaje: ${results.byTopic[topic].percentage.toFixed(1)}%</p>
-                    </div>
-                `).join('');
-
-                document.getElementById("question-container").style.display = "none";
-                document.querySelector(".buttons").style.display = "none";
-                resultContainer.style.display = "block";
+                document.getElementById('topic-breakdown').innerHTML = topicBreakdown;
+                resultContainer.style.display = 'block';
             }
-
-            //
-            function createFigure(type, measurements) {
-                let figure = '';
-                switch(type) {
-                    case 'triangle':
-                        figure = `
-                            <div class="triangle">
-                                <span class="measurement measure-left">a = ${measurements.a}</span>
-                                <span class="measurement measure-bottom">b = ${measurements.b}</span>
-                                <span class="measurement measure-hypotenuse">c = ${measurements.c}</span>
-                            </div>
-                        `;
-                        break;
-                    case 'circle':
-                        figure = `
-                            <div class="circle">
-                                <span class="measurement" style="top: 50%; left: 50%;">r = ${measurements.r}</span>
-                            </div>
-                        `;
-                        break;
-                    case 'rectangle':
-                        figure = `
-                            <div class="rectangle">
-                                <span class="measurement measure-bottom">base = ${measurements.base}</span>
-                                <span class="measurement measure-left">h = ${measurements.height}</span>
-                            </div>
-                        `;
-                        break;
-                }
-                return figure;
-            }
-
-            //
-
-
-
 
             // Event Listeners
-            prevButton.addEventListener("click", () => navigateQuestion('prev'));
-            nextButton.addEventListener("click", () => navigateQuestion('next'));
-            submitButton.addEventListener("click", displayResults);
+            prevButton.addEventListener('click', () => navigateQuestion('prev'));
+            nextButton.addEventListener('click', () => navigateQuestion('next'));
+            submitButton.addEventListener('click', displayResults);
 
             // Iniciar el cuestionario
             displayQuestion();
